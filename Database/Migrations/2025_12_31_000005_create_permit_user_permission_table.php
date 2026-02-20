@@ -17,7 +17,7 @@ class CreatePermitUserPermissionTable extends BaseMigration
 {
     public function up(): void
     {
-        Schema::create('permit_user_permission', function ($table) {
+        Schema::createIfNotExists('permit_user_permission', function ($table) {
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('permission_id');
             $table->string('type', 10)->default('grant');

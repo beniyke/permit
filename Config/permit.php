@@ -69,11 +69,11 @@ return [
     |
     */
     'tables' => [
-        'roles' => 'permit_roles',
-        'permissions' => 'permit_permissions',
-        'role_permissions' => 'permit_role_permission',
-        'user_roles' => 'permit_user_roles',
-        'user_permissions' => 'permit_user_permissions',
+        'role' => 'permit_role',
+        'permission' => 'permit_permission',
+        'role_permission' => 'permit_role_permission',
+        'user_role' => 'permit_user_role',
+        'user_permission' => 'permit_user_permission',
     ],
 
     /*
@@ -88,5 +88,26 @@ return [
         'user_id' => 'user_id',
         'role_id' => 'role_id',
         'permission_id' => 'permission_id',
+    ],
+
+    /**
+     * Smart Middleware Configuration
+     * Automatically derives permissions from URI segments.
+     */
+    'smart_middleware' => [
+        'enabled' => true,
+        'action_map' => [
+            'create' => 'create',
+            'add' => 'create',
+            'store' => 'create',
+            'edit' => 'edit',
+            'update' => 'edit',
+            'delete' => 'delete',
+            'destroy' => 'delete',
+            'remove' => 'delete',
+            'index' => 'manage',
+            'list' => 'manage',
+            'view' => 'manage',
+        ],
     ],
 ];

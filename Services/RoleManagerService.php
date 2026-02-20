@@ -21,12 +21,17 @@ use Permit\Services\Builders\RoleBuilder;
 
 class RoleManagerService
 {
+    public function __construct(
+        private readonly PermissionManagerService $permissions
+    ) {
+    }
+
     /**
      * Create a new RoleBuilder instance.
      */
     public function make(): RoleBuilder
     {
-        return new RoleBuilder($this);
+        return new RoleBuilder($this, $this->permissions);
     }
 
     public function create(
@@ -49,9 +54,6 @@ class RoleManagerService
         ]);
     }
 
-    /**
-     * Find a role by slug.
-     */
     public function find(string $slug): ?Role
     {
         return Role::findBySlug($slug);
@@ -141,19 +143,24 @@ class RoleManagerService
             $role = $this->findOrFail($role);
         }
 
-        $userRoles = UserRole::where('role_id', $role->id)->get();
-        $userIds = [];
+        return $role->users()->get()->toArray();
+    }
 
-        foreach ($userRoles as $userRole) {
-            $userIds[] = $userRole->user_id;
+    public function countUsersWithRole(string|Role $role): int
+    {
+        if (is_string($role)) {
+            $role = $this->findOrFail($role);
         }
 
-        if (empty($userIds)) {
-            return [];
+        return $role->users()->count();
+    }
+
+    public function hasUsers(string|Role $role): bool
+    {
+        if (is_string($role)) {
+            $role = $this->findOrFail($role);
         }
 
-        $userModel = config('permit.user_model', 'App\Models\User');
-
-        return $userModel::whereIn('id', $userIds)->get()->toArray();
+        return $role->users()->exists();
     }
 }

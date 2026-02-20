@@ -29,7 +29,9 @@ use Helpers\DateTimeHelper;
  */
 class Permission extends BaseModel
 {
-    protected string $table = 'permit_permission';
+    public const TABLE = 'permit_permission';
+
+    protected string $table = self::TABLE;
 
     protected array $fillable = [
         'name',

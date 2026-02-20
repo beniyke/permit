@@ -71,7 +71,39 @@ class PermissionManagerService
 
     public function findOrCreate(string $slug, ?string $name = null, ?string $description = null): Permission
     {
-        return Permission::findOrCreate($slug, $name, $description);
+        $permission = Permission::findBySlug($slug);
+
+        if ($permission) {
+            return $permission;
+        }
+
+        // Try to find metadata in the application's permission config
+        $registry = config('permissions', []);
+        $metadata = [
+            'name' => $name,
+            'group' => null,
+            'description' => $description
+        ];
+
+        foreach ($registry as $group => $perms) {
+            if (isset($perms[$slug])) {
+                $metadata['name'] = $metadata['name'] ?? $perms[$slug];
+                $metadata['group'] = $group;
+                break;
+            }
+        }
+
+        return $this->create(
+            $slug,
+            $metadata['name'] ?? $this->generateNameFromSlug($slug),
+            $metadata['description'],
+            $metadata['group']
+        );
+    }
+
+    protected function generateNameFromSlug(string $slug): string
+    {
+        return ucwords(str_replace(['-', '_', '.'], ' ', $slug));
     }
 
     public function all(): array

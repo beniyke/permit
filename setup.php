@@ -17,5 +17,12 @@ return [
     'providers' => [
         Permit\Providers\PermitServiceProvider::class,
     ],
-    'middleware' => [],
+    'middleware' => [
+        'web' => [
+            Permit\Middleware\CheckPermissionMiddleware::class,
+        ],
+        'api' => [
+            Permit\Middleware\CheckPermissionMiddleware::class,
+        ],
+    ],
 ];

@@ -26,7 +26,9 @@ use Permit\Enums\PermissionType;
  */
 class UserPermission extends BaseModel
 {
-    protected string $table = 'permit_user_permission';
+    public const TABLE = 'permit_user_permission';
+
+    protected string $table = self::TABLE;
 
     public bool $timestamps = false;
 

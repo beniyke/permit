@@ -107,6 +107,21 @@ class Permit
         resolve(PermitManagerService::class)->sync($rolesWithPermissions);
     }
 
+    public static function getUsersWithRole(string|Role $role): array
+    {
+        return resolve(RoleManagerService::class)->getUsersWithRole($role);
+    }
+
+    public static function countUsersWithRole(string|Role $role): int
+    {
+        return resolve(RoleManagerService::class)->countUsersWithRole($role);
+    }
+
+    public static function hasUsers(string|Role $role): bool
+    {
+        return resolve(RoleManagerService::class)->hasUsers($role);
+    }
+
     /**
      * Forward static calls to PermitManagerService.
      */

@@ -23,7 +23,9 @@ use Database\Relations\BelongsTo;
  */
 class UserRole extends BaseModel
 {
-    protected string $table = 'permit_user_role';
+    public const TABLE = 'permit_user_role';
+
+    protected string $table = self::TABLE;
 
     public bool $timestamps = false;
 

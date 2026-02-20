@@ -17,7 +17,7 @@ class CreatePermitUserRoleTable extends BaseMigration
 {
     public function up(): void
     {
-        Schema::create('permit_user_role', function ($table) {
+        Schema::createIfNotExists('permit_user_role', function ($table) {
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('role_id');
 

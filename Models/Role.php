@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Permit\Models;
 
+use App\Models\User;
 use Database\BaseModel;
 use Database\Collections\ModelCollection;
 use Database\Relations\BelongsTo;
@@ -35,7 +36,9 @@ use InvalidArgumentException;
  */
 class Role extends BaseModel
 {
-    protected string $table = 'permit_role';
+    public const TABLE = 'permit_role';
+
+    protected string $table = self::TABLE;
 
     protected array $fillable = [
         'name',
@@ -71,14 +74,27 @@ class Role extends BaseModel
         )->withoutTimestamps();
     }
 
-    public function allPermissions(): ModelCollection
+    public function users(): BelongsToMany
+    {
+        $userModel = config('permit.user_model', User::class);
+
+        return $this->belongsToMany(
+            $userModel,
+            'permit_user_role',
+            'role_id',
+            'user_id'
+        )->withoutTimestamps();
+    }
+
+    public function allPermissions(?bool $hierarchyEnabled = null): ModelCollection
     {
         $permissions = $this->permissions()->get();
+        $hierarchyEnabled = $hierarchyEnabled ?? config('permit.role_hierarchy', true);
 
-        if ($this->parent_id && config('permit.role_hierarchy', true)) {
+        if ($this->parent_id && $hierarchyEnabled) {
             $parent = $this->parent()->first();
             if ($parent) {
-                $parentPermissions = $parent->allPermissions();
+                $parentPermissions = $parent->allPermissions($hierarchyEnabled);
                 $permissions = $permissions->merge($parentPermissions);
             }
         }
@@ -146,7 +162,6 @@ class Role extends BaseModel
      */
     public function syncPermissions(array $permissions): void
     {
-        // Remove all existing permissions
         RolePermission::where('role_id', $this->id)->delete();
 
         foreach ($permissions as $permission) {

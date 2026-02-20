@@ -12,13 +12,18 @@ declare(strict_types=1);
 
 namespace Permit\Services\Builders;
 
+use App\Models\User;
 use InvalidArgumentException;
+use Permit\Exceptions\RoleNotFoundException;
 use Permit\Models\Permission;
 use Permit\Models\Role;
+use Permit\Services\PermissionManagerService;
 use Permit\Services\RoleManagerService;
 
 class RoleBuilder
 {
+    private ?int $id = null;
+
     private ?string $slug = null;
 
     private ?string $name = null;
@@ -29,9 +34,19 @@ class RoleBuilder
 
     private array $permissions = [];
 
+    private ?User $assignTo = null;
+
     public function __construct(
-        private readonly RoleManagerService $manager
+        private readonly RoleManagerService $manager,
+        private readonly PermissionManagerService $permission_service
     ) {
+    }
+
+    public function id(int $id): self
+    {
+        $this->id = $id;
+
+        return $this;
     }
 
     public function slug(string $slug): self
@@ -86,6 +101,16 @@ class RoleBuilder
         return $this;
     }
 
+    /**
+     * Assign the resulting role to a user.
+     */
+    public function assign(User $user): self
+    {
+        $this->assignTo = $user;
+
+        return $this;
+    }
+
     public function create(?string $slug = null, ?string $name = null): Role
     {
         $slug = $slug ?? $this->slug;
@@ -105,9 +130,13 @@ class RoleBuilder
         // Assign permissions
         foreach ($this->permissions as $permission) {
             if (is_string($permission)) {
-                $permission = Permission::findOrCreate($permission);
+                $permission = $this->permission_service->findOrCreate($permission);
             }
             $role->givePermission($permission);
+        }
+
+        if ($this->assignTo) {
+            $this->manager->assignToUser($this->assignTo, $role);
         }
 
         return $role;
@@ -129,5 +158,40 @@ class RoleBuilder
         }
 
         return $this->create($slug, $name);
+    }
+
+    public function update(): Role
+    {
+        if (!$this->id && !$this->slug) {
+            throw new InvalidArgumentException('Role ID or Slug is required for update.');
+        }
+
+        $role = $this->id ? Role::find($this->id) : Role::findBySlug($this->slug);
+
+        if (!$role) {
+            $identifier = $this->id ?: $this->slug;
+            throw new RoleNotFoundException("Role '{$identifier}' not found for update.");
+        }
+
+        $role->name = $this->name ?? $role->name;
+        $role->slug = $this->slug ?? $role->slug;
+        $role->description = $this->description ?? $role->description;
+        $role->parent_id = $this->parent?->id ?? $role->parent_id;
+
+        $role->save();
+
+        if (!empty($this->permissions)) {
+            $permissions = [];
+            foreach ($this->permissions as $p) {
+                $permissions[] = is_string($p) ? $this->permission_service->findOrCreate($p) : $p;
+            }
+            $role->syncPermissions($permissions);
+        }
+
+        if ($this->assignTo) {
+            $this->manager->assignToUser($this->assignTo, $role);
+        }
+
+        return $role;
     }
 }
