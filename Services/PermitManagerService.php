@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Permit\Services;
 
 use App\Models\User;
-use App\Services\Auth\Interfaces\AuthServiceInterface;
+use Core\Contracts\AuthServiceInterface;
 use Core\Services\ConfigServiceInterface;
 use Permit\Enums\PermissionType;
 use Permit\Exceptions\UnauthorizedException;
